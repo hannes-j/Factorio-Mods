@@ -1,4 +1,4 @@
-# Factorio-TeleportShortcutsAndHotkeys
+# TeleportShortcutsAndHotkeys
 A mod for the game Factorio.
 
 Adds a free shortcut bar entry to teleport the player to anywhere on the map. Also works while driving car-based vehicles. Destinations must be valid, but in "Alt-mode" (i.e. while displaying additional entity data) collisions and terrain will be ignored.
