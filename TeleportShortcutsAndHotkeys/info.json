@@ -1,14 +1,14 @@
 {
-	"name": "TeleportShortcutsAndHotkeys",
+    "name": "TeleportShortcutsAndHotkeys",
     "version": "1.0.0",
     "title": "Teleport Shortcuts & Hotkeys",
     "author": "Fantasylord",
-    "homepage": "https://github.com/hannes-j/Factorio-TeleportShortcutsAndHotkeys",
+    "homepage": "https://github.com/hannes-j/Factorio-Mods",
     "contact": "",
     "description": "{locale}",
     "factorio_version": "1.0",
     "dependencies": [
         "base >= 1.0.0",
-		"! teleport-shortcut"
+        "! teleport-shortcut"
     ]
 }

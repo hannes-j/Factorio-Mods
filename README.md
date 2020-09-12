@@ -1,2 +1,2 @@
 # Factorio-Mods
-All my mods for the game Factorio.
+All my public mods for the game Factorio.
