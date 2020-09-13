@@ -1,0 +1,13 @@
+{
+    "name": "TeleportProviderChest",
+    "version": "1.0.0",
+    "title": "Teleport-provider logistic chest",
+    "author": "Fantasylord",
+    "homepage": "",
+    "contact": "",
+    "description": "{locale}",
+    "factorio_version": "1.0",
+    "dependencies": [
+        "base >= 1.0.0"
+    ]
+}
