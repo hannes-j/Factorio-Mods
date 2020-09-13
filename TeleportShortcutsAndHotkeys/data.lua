@@ -76,11 +76,33 @@ data:extend({
             flags = { "gui-icon" }
         },
     },
+	{
+        type = "shortcut",
+        name = "teleport-once-shortcut",
+        order = "tele-sc-once",
+        action = "lua",
+        toggleable = false,
+        icon =
+        {
+            filename = mod_path.."teleport_once_shortcut_icon.png",
+            priority = "extra-high-no-scale",
+            size = 64,
+            scale = 0.5,
+            flags = { "gui-icon" }
+        },
+    },
     {
         type = "custom-input",
         name = "teleport-bp",
 		order = "tele-ip-bp",
         key_sequence = "CONTROL + SHIFT + T",
+		consuming = "none"
+    },
+	{
+        type = "custom-input",
+        name = "teleport-bp-quick",
+		order = "tele-ip-bp-quick",
+        key_sequence = "CONTROL + SHIFT + Q",
 		consuming = "none"
     },
 	{
@@ -158,6 +180,13 @@ data:extend({
         name = "teleport-tag",
 		order = "tele-ip-t",
         key_sequence = "CONTROL + SHIFT + ALT + T",
+		consuming = "none"
+    },
+	{
+        type = "custom-input",
+        name = "teleport-tag-prev",
+		order = "tele-ip-t-p",
+        key_sequence = "CONTROL + SHIFT + ALT + Q",
 		consuming = "none"
     }
 })

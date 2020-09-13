@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2020-09-13
+
+  Features:
+    - New shortcut bar entry that causes the tool to be cleared after a single teleport. It also attempts direct teleports if an entity is selected.
+    - New hotkey that repeats the last teleport to a map tag directly.
+
+  Changes:
+    - Added direct check when a player toggles Alt-mode.
+    - Text of input for tag names is immediately selected when opening the teleport window.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2020-09-12
 

@@ -1,10 +1,18 @@
 script.on_init(function()
-	global.next_teleport = {}
+	global.teleport_next = {}
+	global.teleport_once = {}
+	global.teleport_prev = {}
 end)
 
 script.on_configuration_changed(function(configuration_changed_data)
-	if not global.next_teleport then
-		global.next_teleport = {}
+	if not global.teleport_next then
+		global.teleport_next = {}
+	end
+	if not global.teleport_once then
+		global.teleport_once = {}
+	end
+	if not global.teleport_prev then
+		global.teleport_prev = {}
 	end
 end)
 
@@ -108,22 +116,31 @@ function named_teleport(player_idx, tag_name)
     if tag_name ~= nil and tag_name ~= "" then
 		local player = game.players[player_idx]
 		
-		local surface = player.surface
-		local tags = player.force.find_chart_tags(surface)
+		local tags = player.force.find_chart_tags(player.surface)
 		
 		for i = 1, #tags do
 			if string.lower(tags[i].text) == string.lower(tag_name) then
-				local position = tags[i].surface.find_non_colliding_position("character", tags[i].position, 20, 2)
-				if not position then
-					position=tags[i].position
-				end
+				local pos = tags[i].position
 				
 				if player.vehicle and player.vehicle.valid then
-					player.vehicle.teleport(position)
-				else
-					player.teleport(position)
+					if math.floor(player.vehicle.position.x + 0.5) ~= math.floor(pos.x + 0.5) or
+					   math.floor(player.vehicle.position.y + 0.5) ~= math.floor(pos.y + 0.5) then
+						pos = tags[i].surface.find_non_colliding_position(player.vehicle.prototype.name, tags[i].position, 10, 1)
+						if not pos then pos = tags[i].position end
+						
+						player.vehicle.teleport(pos)
+					end
+				elseif math.floor(player.position.x + 0.5) ~= math.floor(pos.x + 0.5) or
+				       math.floor(player.position.y + 0.5) ~= math.floor(pos.y + 0.5) then
+					if player.character and player.character.valid then
+						pos = tags[i].surface.find_non_colliding_position(player.character.prototype.name, tags[i].position, 10, 1)
+						if not pos then pos = tags[i].position end
+					end
+					
+					player.teleport(pos)
 				end
 				
+				global.teleport_prev[player_idx] = pos
 				break
 			end
 		end
@@ -135,7 +152,7 @@ function equip_teleport_tool(player_idx)
     
     if player.clean_cursor() then
 		player.cursor_stack.set_stack("teleport-destination-blueprint")
-	
+		
 		if player.game_view_settings.show_entity_info then
 			player.cursor_stack.set_blueprint_entities({
 				{entity_number = 1, name = "teleport-destination-any", position = {x=0, y=0}}
@@ -159,12 +176,47 @@ end)
 
 script.on_event(defines.events.on_lua_shortcut, function(event)
     if event.prototype_name == "teleport-shortcut" then
-        equip_teleport_tool(event.player_index)
+		global.teleport_once[event.player_index] = false
+		equip_teleport_tool(event.player_index)
+	elseif event.prototype_name == "teleport-once-shortcut" then
+		global.teleport_once[event.player_index] = true
+		equip_teleport_tool(event.player_index)
     end
 end)
 
+script.on_event(defines.events.on_player_toggled_alt_mode, function(event)
+    local player = game.players[event.player_index]
+	
+	if player.cursor_stack and player.cursor_stack.valid_for_read and string.find(player.cursor_stack.name, "teleport%-destination") then
+		equip_teleport_tool(event.player_index)
+	end
+end)
+
 script.on_event("teleport-bp", function(event)
+	global.teleport_once[event.player_index] = false
 	equip_teleport_tool(event.player_index)
+end)
+
+script.on_event("teleport-bp-quick", function(event)
+	global.teleport_once[event.player_index] = true
+	equip_teleport_tool(event.player_index)
+	
+	local player = game.players[event.player_index]
+	local pos = nil
+	if player.selected then
+		pos = player.selected.position
+	end
+	
+	if pos then
+		if player.can_build_from_cursor{position=pos, skip_fog_of_war=true} then
+			player.build_from_cursor{position=pos}
+		else
+			pos = player.surface.find_non_colliding_position("wooden-chest", pos, 5, 1, true)
+			if pos and player.can_build_from_cursor{position=pos, skip_fog_of_war=true} then
+				player.build_from_cursor{position=pos}
+			end
+		end
+	end
 end)
 
 script.on_event("teleport-dir-down", function(event)
@@ -226,16 +278,32 @@ script.on_event("teleport-tag", function(event)
 		frame.add(teleport_btn)
 	end
 	
-	local input_window = gui.center["teleport-tag-gui"]
-	input_window.visible=true
-	input_window.enabled=true
-	input_window.focus()
+	local input_win = gui.center["teleport-tag-gui"]
+	input_win.visible=true
+	input_win.enabled=true
+	input_win.focus()
+	
+	local input = input_win["teleport-tag-gui-txt"]
+	input.select_all()
+	input.focus()
+end)
+
+script.on_event("teleport-tag-prev", function(event)
+	if global.teleport_prev[event.player_index] then
+		local player = game.players[event.player_index]
+		
+		if player.vehicle and player.vehicle.valid then
+			player.vehicle.teleport(global.teleport_prev[event.player_index])
+        else
+			player.teleport(global.teleport_prev[event.player_index])
+		end
+	end
 end)
 
 script.on_event(defines.events.on_built_entity, function(event)
     local entity = event.created_entity
     local player = game.players[event.player_index]
-
+	
     if entity.name ~= "entity-ghost" then return end
     
     if entity.ghost_name == "teleport-destination-any" then
@@ -249,17 +317,20 @@ script.on_event(defines.events.on_built_entity, function(event)
     else return end
     
     local position = entity.position
-  --local surface = entity.surface
     entity.destroy()
     
-    local nt = global.next_teleport[event.player_index]
+    local nt = global.teleport_next[event.player_index]
     if not nt or nt < event.tick then
-        global.next_teleport[event.player_index] = event.tick + 10
+        global.teleport_next[event.player_index] = event.tick + 6
 		
         if player.vehicle and player.vehicle.valid then
 			player.vehicle.teleport(position)
         else
 			player.teleport(position)
+		end
+		
+		if global.teleport_once[event.player_index] then
+			player.clean_cursor()
 		end
     end
 end)
