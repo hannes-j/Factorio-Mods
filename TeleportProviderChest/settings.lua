@@ -6,7 +6,7 @@ data:extend({
 		minimum_value = 30,
         maximum_value = 600,
         default_value = 120,
-        order = "tele-prvdr-intvl"
+        order = "tele-prvdr-itrvl"
 	},
     
     {
@@ -14,8 +14,17 @@ data:extend({
         name = "teleport-provider-distance",
         setting_type = "runtime-global",
         minimum_value = 0,
-        maximum_value = 10000,
-        default_value = 100,
-        order = "tele-prvdr-dist"
+        maximum_value = 20000,
+        default_value = 25,
+        order = "tele-prvdr-dstnc"
+    },
+    {
+        type = "int-setting",
+        name = "teleport-provider-penalty",
+        setting_type = "runtime-global",
+        minimum_value = 0,
+        maximum_value = 20000,
+        default_value = 25,
+        order = "tele-prvdr-pnlty"
     }
 })

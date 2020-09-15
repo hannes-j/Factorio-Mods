@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2020-09-15
+
+  Features:
+    - Added setting to set a distance penalty for teleporting items between different surfaces/worlds.
+
+  Bugfixes:
+    - Added checks to prevent errors on player deaths or when entities are missing.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2020-09-13
 

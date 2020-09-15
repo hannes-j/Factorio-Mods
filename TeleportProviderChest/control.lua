@@ -1,7 +1,9 @@
 local provider_prototype = "logistic-teleport-chest"
 
 local dist_max_squared = 0
+local dist_pen_squared = 0
 local distance_maximum = 0
+local distance_penalty = 0
 local provider_list = nil
 local receiver_list = nil
 local teleporting = false
@@ -23,7 +25,10 @@ function handle_requests()
     teleporting = true
     
     distance_maximum = settings.global["teleport-provider-distance"].value
-    dist_max_squared = distance_maximum^2
+    dist_max_squared = distance_maximum^2 + 0.35
+    
+    distance_penalty = settings.global["teleport-provider-penalty"].value
+    dist_pen_squared = distance_penalty^2 + 0.65
     
     if provider_list == nil then
         register_providers()
@@ -56,16 +61,9 @@ end
 function handle_player_requests(providers_by_force)
     for key, value in pairs(providers_by_force) do
         for i, player in pairs(value.force.players) do
-            if player.character_logistic_slot_count and player.character_personal_logistic_requests_enabled then
+            if player.character and player.character.valid and player.character_logistic_slot_count and player.character_personal_logistic_requests_enabled then
                 local inventory = player.get_main_inventory()
                 local item_amts = inventory.get_contents()
-                
-                local position = nil
-                local logistic_points = nil
-                if player.character and player.character.valid then
-                    logistic_points = player.character.get_logistic_point()
-                    position = player.character.position
-                end
                 
                 for j = 1, player.character_logistic_slot_count do
                     local slot = player.get_personal_logistic_slot(j)
@@ -82,7 +80,7 @@ function handle_player_requests(providers_by_force)
                         end
                         
                         if count >= 1 then
-                            transfer_items(value.entity_array, slot.name, count, inventory, logistic_points, position)
+                            transfer_items(value.entity_array, slot.name, count, inventory, player.character.get_logistic_point(), player.character.position, player.character.surface)
                         end
                     end
                 end
@@ -115,6 +113,10 @@ function handle_storage_requests(providers_by_force)
     end
     
     for key, value in pairs(providers_by_force) do
+        if not receivers_by_force[key] then
+            receivers_by_force[key] = {force = providers_by_force[key].force, entity_array = {}}
+        end
+        
         for i, receiver in pairs(receivers_by_force[key].entity_array) do
             if receiver.request_slot_count and (receiver.request_from_buffers == nil or receiver.request_from_buffers or receiver.prototype.logistic_mode == "buffer") then
                 local inventory = receiver.get_inventory(defines.inventory.chest)
@@ -131,7 +133,7 @@ function handle_storage_requests(providers_by_force)
                         end
                         
                         if count >= 1 then
-                            transfer_items(value.entity_array, slot.name, count, inventory, receiver.get_logistic_point(), receiver.position)
+                            transfer_items(value.entity_array, slot.name, count, inventory, receiver.get_logistic_point(), receiver.position, receiver.surface)
                         end
                     end
                 end
@@ -172,7 +174,7 @@ function register_receivers()
     end
 end
 
-function transfer_items(provider_chests, item_name, item_count, target_inventory, target_logistic_pts, target_position)
+function transfer_items(provider_chests, item_name, item_count, target_inventory, target_logistic_pts, target_position, target_surface)
     if target_logistic_pts then
         for i = 1, #target_logistic_pts do
             if target_logistic_pts[i].targeted_items_deliver and target_logistic_pts[i].targeted_items_deliver[item_name] then
@@ -188,6 +190,10 @@ function transfer_items(provider_chests, item_name, item_count, target_inventory
         
         for i = 1, #provider_chests do
             local dist_sqrd = calc_distance_squared(provider_chests[i].position, target_position)
+            
+            if target_surface and target_surface.name ~= provider_chests[i].surface.name then
+                dist_sqrd = dist_sqrd + dist_pen_squared
+            end
             
             if distance_maximum <= 0 or dist_sqrd < dist_max_squared then
                 index_by_dist[#index_by_dist + 1] = {idx = i, dist = dist_sqrd}
