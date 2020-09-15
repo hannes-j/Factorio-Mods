@@ -5,7 +5,7 @@ Adds shortcut bar entries to teleport the player to anywhere on the map; they al
 
 In addition, hotkeys for teleporting configurable distances in specific directions are added. These "jumps" always ignore collisions and terrain.
 
-The final way of teleporting is by using a specific hotkey that allows to input the name of any map tag as teleport destination. Afterwards, this can be repeated directly by pressing another hotkey.
+The final way of teleporting is by using a specific hotkey that allows to input a name as destination - it can be any map tag belonging to the own force/team. Afterwards, this can be repeated directly by pressing another hotkey.
 
 -----
 Partially based on the mod 'Teleport Shortcut' by 'waltermundt'.

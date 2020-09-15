@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 2020-09-15
+
+  Changes:
+    - Teleports to map tags look for destinations on other surfaces/worlds when there's no matching target on the current surface.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.1
 Date: 2020-09-13
 
