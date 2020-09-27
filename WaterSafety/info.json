@@ -1,0 +1,14 @@
+{
+    "name": "WaterSafety",
+    "version": "1.0.0",
+    "title": "Water Safety",
+    "author": "Fantasylord",
+    "homepage": "",
+    "contact": "",
+    "description": "{locale}",
+    "factorio_version": "1.0",
+    "dependencies": [
+        "base >= 1.0.0",
+        "? platforms >= 1.1.6"
+    ]
+}
