@@ -353,6 +353,7 @@ script.on_event(defines.events.on_built_entity, function(event)
         
         if global.teleport_once[event.player_index] then
             player.clean_cursor()
+            player.close_map()
         end
     end
 end)
