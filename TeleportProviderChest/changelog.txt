@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 2020-10-15
+
+  Changes:
+    - Added more event checks regarding new logistic entities.
+    - Variables with shared scope like the lists of providing and receiving entites now are saved globally.
+
+  Bugfixes:
+    - Added checks to prevent errors on scenarios that start with incompletely initialized surfaces/worlds.
+    - Things like ammo counts and equipment grids of items now are preserved when teleported.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.1
 Date: 2020-09-15
 

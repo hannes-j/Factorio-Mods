@@ -1,12 +1,26 @@
 local provider_prototype = "logistic-teleport-chest"
 
-local dist_max_squared = 0
-local dist_pen_squared = 0
-local distance_maximum = 0
-local distance_penalty = 0
-local provider_list = nil
-local receiver_list = nil
-local teleporting = false
+
+script.on_init(function()
+    global.dist_max_squared = 0
+    global.dist_pen_squared = 0
+    global.distance_maximum = 0
+    global.distance_penalty = 0
+    global.provider_list = nil
+    global.receiver_list = nil
+    global.teleporting = false
+end)
+
+script.on_configuration_changed(function(configuration_changed_data)
+    global.dist_max_squared = 0
+    global.dist_pen_squared = 0
+    global.distance_maximum = 0
+    global.distance_penalty = 0
+    global.provider_list = nil
+    global.receiver_list = nil
+    global.teleporting = false
+end)
+
 
 function calc_distance_squared(pos1, pos2)
     if not pos1 then
@@ -21,28 +35,23 @@ function calc_distance_squared(pos1, pos2)
 end
 
 function handle_requests()
-    if teleporting then return end
-    teleporting = true
+    if global.teleporting then return end
+    global.teleporting = true
     
-    distance_maximum = settings.global["teleport-provider-distance"].value
-    dist_max_squared = distance_maximum^2 + 0.35
+    global.distance_maximum = settings.global["teleport-provider-distance"].value
+    global.dist_max_squared = global.distance_maximum^2 + 0.35
     
-    distance_penalty = settings.global["teleport-provider-penalty"].value
-    dist_pen_squared = distance_penalty^2 + 0.65
+    global.distance_penalty = settings.global["teleport-provider-penalty"].value
+    global.dist_pen_squared = global.distance_penalty^2 + 0.65
     
-    if provider_list == nil then
-        register_providers()
+    if global.provider_list == nil then register_providers() end
+    
+    local providers = global.provider_list
+    global.provider_list = {}
+    for i = 1, #providers do
+        if providers[i] and providers[i].valid then global.provider_list[#global.provider_list + 1] = providers[i] end
     end
-    
-    local providers = {}
-    local providers_up = {}
-    for i = 1, #provider_list do
-        if provider_list[i] and provider_list[i].valid then
-            providers_up[#providers_up + 1] = provider_list[i]
-            providers[#providers + 1] = provider_list[i]
-        end
-    end
-    provider_list = providers_up
+    providers = global.provider_list
     
     local providers_by_force = {}
     for i = 1, #providers do
@@ -55,7 +64,7 @@ function handle_requests()
     handle_player_requests(providers_by_force)
     handle_storage_requests(providers_by_force)
     
-    teleporting = false
+    global.teleporting = false
 end
 
 function handle_player_requests(providers_by_force)
@@ -90,19 +99,14 @@ function handle_player_requests(providers_by_force)
 end
 
 function handle_storage_requests(providers_by_force)
-    if receiver_list == nil then
-        register_receivers()
-    end
+    if global.receiver_list == nil then register_receivers() end
     
-    local receivers = {}
-    local receivers_up = {}
-    for i = 1, #receiver_list do
-        if receiver_list[i] and receiver_list[i].valid then
-            receivers_up[#receivers_up + 1] = receiver_list[i]
-            receivers[#receivers + 1] = receiver_list[i]
-        end
+    local receivers = global.receiver_list
+    global.receiver_list = {}
+    for i = 1, #receivers do
+        if receivers[i] and receivers[i].valid then global.receiver_list[#global.receiver_list + 1] = receivers[i] end
     end
-    receiver_list = receivers_up
+    receivers = global.receiver_list
     
     local receivers_by_force = {}
     for i = 1, #receivers do
@@ -143,32 +147,33 @@ function handle_storage_requests(providers_by_force)
 end
 
 function register_providers()
-    teleporting = true
-    provider_list = {}
+    global.provider_list = {}
     
-    for i = 1, #game.surfaces do
-        local entities = game.surfaces[i].find_entities_filtered({type = "logistic-container"})
-        
-        for j = 1, #entities do
-            if entities[j].valid and entities[j].prototype.name == provider_prototype then
-                provider_list[#provider_list + 1] = entities[j]
+    for _, surface in pairs(game.surfaces) do
+        if surface then
+            local entities = surface.find_entities_filtered({type = "logistic-container"})
+            
+            for i = 1, #entities do
+                if entities[i].valid and entities[i].prototype.name == provider_prototype then
+                    global.provider_list[#global.provider_list + 1] = entities[i]
+                end
             end
         end
     end
-    
-    teleporting = false
 end
 
 function register_receivers()
-    receiver_list = {}
+    global.receiver_list = {}
     
-    for i = 1, #game.surfaces do
-        local entities = game.surfaces[i].find_entities_filtered({type = "logistic-container"})
-        
-        for j = 1, #entities do
-            if entities[j].valid and entities[j].prototype.name ~= provider_prototype and
-              (entities[j].prototype.logistic_mode == "buffer" or entities[j].prototype.logistic_mode == "requester") then
-                receiver_list[#receiver_list + 1] = entities[j]
+    for _, surface in pairs(game.surfaces) do
+        if surface then
+            local entities = surface.find_entities_filtered({type = "logistic-container"})
+            
+            for i = 1, #entities do
+                if entities[i].valid and entities[i].prototype.name ~= provider_prototype and
+                  (entities[i].prototype.logistic_mode == "buffer" or entities[i].prototype.logistic_mode == "requester") then
+                    global.receiver_list[#global.receiver_list + 1] = entities[i]
+                end
             end
         end
     end
@@ -192,12 +197,12 @@ function transfer_items(provider_chests, item_name, item_count, target_inventory
             local dist_sqrd = calc_distance_squared(provider_chests[i].position, target_position)
             
             if target_surface and target_surface.name ~= provider_chests[i].surface.name then
-                dist_sqrd = dist_sqrd + dist_pen_squared
+                dist_sqrd = dist_sqrd + global.dist_pen_squared
             end
             
-            if distance_maximum <= 0 or dist_sqrd < dist_max_squared then
+            if global.distance_maximum <= 0 or dist_sqrd < global.dist_max_squared then
                 index_by_dist[#index_by_dist + 1] = {idx = i, dist = dist_sqrd}
-            
+                
                 for j = #index_by_dist, 2, -1 do
                     if index_by_dist[j - 1].dist >= dist_sqrd then
                         index_by_dist[j] = index_by_dist[j - 1]
@@ -212,42 +217,76 @@ function transfer_items(provider_chests, item_name, item_count, target_inventory
         end
     else
         providers = provider_chests
-    end    
+    end
+    
+    local tmp_inv = game.create_inventory(1)
     
     for i = 1, #providers do
         if item_count < 1 then break end
         
-        local inventory = providers[i].get_inventory(defines.inventory.chest)
-        local item_amts = inventory.get_contents()
-            
-        if item_amts[item_name] ~= nil and item_amts[item_name] >= 1 then
-            local transfer_count = target_inventory.insert({name = item_name, count = math.min(item_count, item_amts[item_name])})
-            
-            if transfer_count then
-                inventory.remove({name = item_name, count = transfer_count})
+        local src_inv = providers[i].get_inventory(defines.inventory.chest)
+        local src_stk = src_inv.find_item_stack(item_name)
+        local tmp_stk = nil
+        
+        while src_stk and item_count >= 1 and target_inventory.can_insert(src_stk) do
+            if src_stk.count > item_count then
+                tmp_inv[1].set_stack(src_stk)
+                tmp_inv[1].count = item_count  -- changing count of stack resets some meta-values
+                tmp_stk = tmp_inv[1]
                 
-                item_count = item_count - transfer_count
+                if src_stk.durability     then tmp_stk.durability = src_stk.durability end
+                if src_stk.health         then tmp_stk.health     = src_stk.health     end
+                if src_stk.type == "ammo" then tmp_stk.ammo       = src_stk.ammo       end
+            else
+                tmp_stk = src_stk
             end
+            
+            local trns_count = target_inventory.insert(tmp_stk)
+            
+            if trns_count >= 1 then
+                item_count = item_count - trns_count
+                src_stk.count = src_stk.count - trns_count
+                
+                if item_count >= 1 then src_stk = src_inv.find_item_stack(item_name) end
+            else break end
         end
+        
+        tmp_inv.clear()
+        src_inv.sort_and_merge()
     end
+    
+    tmp_inv.destroy()
 end
 
-script.on_event(defines.events.on_built_entity, function(event)
+
+script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_entity, defines.events.script_raised_built}, function(event)
     local entity = event.created_entity
+    if not entity then entity = event.entity end
+    if not entity then return end
     
     if entity.prototype.name == provider_prototype then
-        if provider_list == nil then
+        if global.provider_list == nil then
             register_providers()
         else
-            provider_list[#provider_list + 1] = entity
+            global.provider_list[#global.provider_list + 1] = entity
         end
     elseif entity.type == "logistic-container" and (entity.prototype.logistic_mode == "buffer" or entity.prototype.logistic_mode == "requester") then
-        if receiver_list == nil then
+        if global.receiver_list == nil then
             register_receivers()
         else
-            receiver_list[#receiver_list + 1] = entity
+            global.receiver_list[#global.receiver_list + 1] = entity
         end
     end
+end)
+
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
+    if not string.find(event.setting, "teleport%-provider") then return end
+    global.teleporting = true
+    
+    register_providers()
+    register_receivers()
+    
+    global.teleporting = false
 end)
 
 script.on_nth_tick(settings.startup["teleport-provider-interval"].value, handle_requests)
