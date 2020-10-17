@@ -4,6 +4,7 @@ local tint = {a = 1.00, b = 0.65, g = 0.50, r = 0.35}
 local entity = table.deepcopy(data.raw["logistic-container"]["logistic-chest-buffer"])
 entity.name = name
 entity.minable.result = name
+entity.render_not_in_network_icon = false
 entity.animation.layers[1]["tint"] = tint
 entity.animation.layers[1].hr_version["tint"] = tint
 

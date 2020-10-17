@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.3
+Date: 2020-10-17
+
+  Changes:
+    - Increased maximum values for range settings (0 still means unlimited range).
+    - Teleport chests never show logistic warning icons for not being part of a network.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.2
 Date: 2020-10-15
 
