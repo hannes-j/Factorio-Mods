@@ -9,6 +9,8 @@ script.on_init(function()
     global.provider_list = nil
     global.receiver_list = nil
     global.teleporting = false
+    
+    validate_technologies()
 end)
 
 script.on_configuration_changed(function(configuration_changed_data)
@@ -19,6 +21,8 @@ script.on_configuration_changed(function(configuration_changed_data)
     global.provider_list = nil
     global.receiver_list = nil
     global.teleporting = false
+    
+    validate_technologies()
 end)
 
 
@@ -256,6 +260,16 @@ function transfer_items(provider_chests, item_name, item_count, target_inventory
     end
     
     tmp_inv.destroy()
+end
+
+function validate_technologies()
+    for _, force in pairs(game.forces) do
+        if force and force.technologies["logistic-system"] and force.technologies["logistic-system"].researched then
+            -- re-unlock recipes
+            force.technologies["logistic-system"].researched = false
+            force.technologies["logistic-system"].researched = true
+        end
+    end
 end
 
 
