@@ -13,7 +13,15 @@ local rpl_list = {
 }
 
 
-script.on_configuration_changed(revise_tiles_global)
+script.on_init(function()
+    validate_technologies()
+    revise_tiles_globally()
+end)
+
+script.on_configuration_changed(function(configuration_changed_data)
+    validate_technologies()
+    revise_tiles_globally()
+end)
 
 
 function exe_swimming(player)
@@ -93,14 +101,36 @@ function revise_tiles(surface_index, tile_list, tile_new)
     end
 end
 
-function revise_tiles_global()
-    for i = 1, #game.surfaces do
-        for _, check_name in pairs(rpl_list) do
-            local tiles = game.surfaces[i].find_tiles_filtered({name = check_name})
+function revise_tiles_globally()
+    for _, surface in pairs(game.surfaces) do
+        if surface then
+            local tiles = surface.find_tiles_filtered({name = rpl_list})
             
             if tiles and #tiles >= 1 then
-                revise_tiles(i, tiles, tiles[1])
+                local tiles_per_type = {}
+                
+                for _, tile in pairs(tiles) do
+                    if tiles_per_type[tile.name] == nil or #tiles_per_type[tile.name] < 1 then
+                        tiles_per_type[tile.name] = { tile }
+                    else
+                        tiles_per_type[tile.name][#tiles_per_type[tile.name] + 1] = tile
+                    end
+                end
+                
+                for name, tile_list in pairs(tiles_per_type) do
+                    revise_tiles(surface.index, tile_list, tile_list[1])
+                end
             end
+        end
+    end
+end
+
+function validate_technologies()
+    for _, force in pairs(game.forces) do
+        if force and force.technologies["cliff-explosives"] and force.technologies["cliff-explosives"].researched then
+            -- re-unlock recipes
+            force.technologies["cliff-explosives"].researched = false
+            force.technologies["cliff-explosives"].researched = true
         end
     end
 end
@@ -136,7 +166,7 @@ script.on_event({defines.events.on_player_mined_tile, defines.events.on_robot_mi
     end
 end)
 
-script.on_nth_tick(90, function()
+script.on_nth_tick(180, function()
     for i = 1, #game.players do
         revert_tiles(game.players[i].surface, game.players[i].position, 5)
     end
@@ -146,4 +176,4 @@ script.on_nth_tick(90, function()
     end
 end)
 
-script.on_nth_tick(54000, revise_tiles_global)
+script.on_nth_tick(54000, revise_tiles_globally)

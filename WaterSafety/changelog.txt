@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2020-10-22
+
+  Bugfixes:
+    - Added functionality to unlock recipe retroactively when technology was already researched.
+
+  Optimisations:
+    - Global tile-validation now searches for all relevant tile-types in one go.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2020-09-27
 
