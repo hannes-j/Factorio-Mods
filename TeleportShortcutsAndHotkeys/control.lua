@@ -171,10 +171,10 @@ end
 
 function equip_teleport_tool(player_idx)
     local player = game.players[player_idx]
-    
-    if player.clean_cursor() then
+
+    if player.clear_cursor() then
         player.cursor_stack.set_stack("teleport-destination-blueprint")
-        
+
         if player.game_view_settings.show_entity_info then
             player.cursor_stack.set_blueprint_entities({
                 {entity_number = 1, name = "teleport-destination-any", position = {x=0, y=0}}
@@ -337,22 +337,22 @@ script.on_event(defines.events.on_built_entity, function(event)
             equip_teleport_tool(event.player_index)
         end
     else return end
-    
+
     local position = entity.position
     entity.destroy()
-    
+
     local nt = global.teleport_next[event.player_index]
     if not nt or nt < event.tick then
         global.teleport_next[event.player_index] = event.tick + 6
-        
+
         if player.vehicle and player.vehicle.valid then
             player.vehicle.teleport(position)
         else
             player.teleport(position)
         end
-        
+
         if global.teleport_once[event.player_index] then
-            player.clean_cursor()
+            player.clear_cursor()
             player.close_map()
         end
     end
