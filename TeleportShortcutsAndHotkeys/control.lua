@@ -172,7 +172,7 @@ end
 function equip_teleport_tool(player_idx)
     local player = game.players[player_idx]
     
-    if player.clean_cursor() then
+    if player.clear_cursor() then
         player.cursor_stack.set_stack("teleport-destination-blueprint")
         
         if player.game_view_settings.show_entity_info then
@@ -352,7 +352,7 @@ script.on_event(defines.events.on_built_entity, function(event)
         end
         
         if global.teleport_once[event.player_index] then
-            player.clean_cursor()
+            player.clear_cursor()
             player.close_map()
         end
     end
