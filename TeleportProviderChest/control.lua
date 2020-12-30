@@ -1,5 +1,10 @@
 local provider_prototype = "logistic-teleport-chest"
-
+local logistic_vehicle_inventories = {
+    defines.inventory.spider_trunk
+}
+local logistic_vehicle_types = {
+    "spider-vehicle"
+}
 
 script.on_init(function()
     global.dist_max_squared = 0
@@ -8,6 +13,7 @@ script.on_init(function()
     global.distance_penalty = 0
     global.provider_list = nil
     global.receiver_list = nil
+    global.vehicles_list = nil
     global.teleporting = false
     
     validate_technologies()
@@ -20,6 +26,7 @@ script.on_configuration_changed(function(configuration_changed_data)
     global.distance_penalty = 0
     global.provider_list = nil
     global.receiver_list = nil
+    global.vehicles_list = nil
     global.teleporting = false
     
     validate_technologies()
@@ -62,11 +69,15 @@ function handle_requests()
         if providers_by_force[providers[i].force.name] == nil then
             providers_by_force[providers[i].force.name] = {force = providers[i].force, entity_array = {}}
         end
+        
+        providers[i].get_inventory(defines.inventory.chest).sort_and_merge()
+        
         providers_by_force[providers[i].force.name].entity_array[#(providers_by_force[providers[i].force.name].entity_array) + 1] = providers[i]
     end
     
     handle_player_requests(providers_by_force)
     handle_storage_requests(providers_by_force)
+    handle_vehicle_requests(providers_by_force)
     
     global.teleporting = false
 end
@@ -74,14 +85,16 @@ end
 function handle_player_requests(providers_by_force)
     for key, value in pairs(providers_by_force) do
         for i, player in pairs(value.force.players) do
-            if player.character and player.character.valid and player.character_logistic_slot_count and player.character_personal_logistic_requests_enabled then
+            if player.character and player.character.valid and player.character_personal_logistic_requests_enabled then
                 local inventory = player.get_main_inventory()
                 local item_amts = inventory.get_contents()
                 
-                for j = 1, player.character_logistic_slot_count do
+                for j = 1, 65535 do
                     local slot = player.get_personal_logistic_slot(j)
                     
-                    if slot and slot.name then
+                    if slot == nil then break end
+                    
+                    if slot.name and slot.min then
                         local count = slot.min
                         
                         if item_amts[slot.name] then
@@ -117,6 +130,7 @@ function handle_storage_requests(providers_by_force)
         if receivers_by_force[receivers[i].force.name] == nil then
             receivers_by_force[receivers[i].force.name] = {force = receivers[i].force, entity_array = {}}
         end
+        
         receivers_by_force[receivers[i].force.name].entity_array[#(receivers_by_force[receivers[i].force.name].entity_array) + 1] = receivers[i]
     end
     
@@ -133,7 +147,7 @@ function handle_storage_requests(providers_by_force)
                 for j = 1, receiver.request_slot_count do
                     local slot = receiver.get_request_slot(j)
                     
-                    if slot and slot.name then
+                    if slot and slot.name and slot.count then
                         local count = slot.count
                         
                         if item_amts[slot.name] then
@@ -142,6 +156,59 @@ function handle_storage_requests(providers_by_force)
                         
                         if count >= 1 then
                             transfer_items(value.entity_array, slot.name, count, inventory, receiver.get_logistic_point(), receiver.position, receiver.surface)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function handle_vehicle_requests(providers_by_force)
+    if global.vehicles_list == nil then register_vehicles() end
+    
+    local vehicles = global.vehicles_list
+    global.vehicles_list = {}
+    for i = 1, #vehicles do
+        if vehicles[i] and vehicles[i].valid then global.vehicles_list[#global.vehicles_list + 1] = vehicles[i] end
+    end
+    vehicles = global.vehicles_list
+    
+    local vehicles_by_force = {}
+    for i = 1, #vehicles do
+        if vehicles_by_force[vehicles[i].force.name] == nil then
+            vehicles_by_force[vehicles[i].force.name] = {force = vehicles[i].force, entity_array = {}}
+        end
+        
+        vehicles_by_force[vehicles[i].force.name].entity_array[#(vehicles_by_force[vehicles[i].force.name].entity_array) + 1] = vehicles[i]
+    end
+    
+    for key, value in pairs(providers_by_force) do
+        if not vehicles_by_force[key] then
+            vehicles_by_force[key] = {force = providers_by_force[key].force, entity_array = {}}
+        end
+        
+        for i, entity in pairs(vehicles_by_force[key].entity_array) do
+            if entity.vehicle_logistic_requests_enabled and (entity.enable_logistics_while_moving or not entity.moving) then
+                local inventory = nil
+                for j = 1, #logistic_vehicle_inventories do
+                    inventory = entity.get_inventory(logistic_vehicle_inventories[j])
+                    if inventory then break end
+                end
+                local item_amts = inventory.get_contents()
+                
+                for j = 1, entity.request_slot_count do
+                    local slot = entity.get_request_slot(j)
+                    
+                    if slot and slot.name and slot.count then
+                        local count = slot.count
+                        
+                        if item_amts[slot.name] then
+                            count = count - item_amts[slot.name]
+                        end
+                        
+                        if count >= 1 then
+                            transfer_items(value.entity_array, slot.name, count, inventory, entity.get_logistic_point(), entity.position, entity.surface)
                         end
                     end
                 end
@@ -183,6 +250,22 @@ function register_receivers()
     end
 end
 
+function register_vehicles()
+    global.vehicles_list = {}
+    
+    for _, surface in pairs(game.surfaces) do
+        if surface then
+            local entities = surface.find_entities_filtered({type = logistic_vehicle_types})
+            
+            for i = 1, #entities do
+                if entities[i].valid and entities[i].get_vehicle_logistic_slot(1) then
+                    global.vehicles_list[#global.vehicles_list + 1] = entities[i]
+                end
+            end
+        end
+    end
+end
+
 function transfer_items(provider_chests, item_name, item_count, target_inventory, target_logistic_pts, target_position, target_surface)
     if target_logistic_pts then
         for i = 1, #target_logistic_pts do
@@ -193,6 +276,7 @@ function transfer_items(provider_chests, item_name, item_count, target_inventory
     end
     if item_count < 1 then return end
     
+    -- sort providers by distance
     local providers = {}
     if target_position then
         local index_by_dist = {}
@@ -223,6 +307,7 @@ function transfer_items(provider_chests, item_name, item_count, target_inventory
         providers = provider_chests
     end
     
+    -- execute item transfer
     local tmp_inv = game.create_inventory(1)
     
     for i = 1, #providers do
@@ -256,7 +341,6 @@ function transfer_items(provider_chests, item_name, item_count, target_inventory
         end
         
         tmp_inv.clear()
-        src_inv.sort_and_merge()
     end
     
     tmp_inv.destroy()
@@ -290,6 +374,16 @@ script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_e
         else
             global.receiver_list[#global.receiver_list + 1] = entity
         end
+    else
+        for i = 1, #logistic_vehicle_types do
+            if entity.type == logistic_vehicle_types[i] then
+                if global.vehicles_list == nil then
+                    register_vehicles()
+                else
+                    global.vehicles_list[#global.vehicles_list + 1] = entity
+                end
+            end
+        end
     end
 end)
 
@@ -299,6 +393,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
     
     register_providers()
     register_receivers()
+    register_vehicles()
     
     global.teleporting = false
 end)

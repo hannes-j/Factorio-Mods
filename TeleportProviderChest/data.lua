@@ -18,8 +18,14 @@ local recipe = table.deepcopy(data.raw.recipe["logistic-chest-buffer"])
 recipe.name = name
 recipe.result = name
 recipe.ingredients = {
-    {"processing-unit", 100},
-    {"logistic-chest-buffer", 1}
+    {"logistic-chest-buffer", 1},
+    {"radar", 1}
 }
+if settings.startup["teleport-provider-recipe-bat"].value >= 1 then
+    recipe.ingredients[#recipe.ingredients + 1] = {"battery", settings.startup["teleport-provider-recipe-bat"].value}
+end
+if settings.startup["teleport-provider-recipe-pu"].value >= 1 then
+    recipe.ingredients[#recipe.ingredients + 1] = {"processing-unit", settings.startup["teleport-provider-recipe-pu"].value}
+end
 
 data:extend({ entity, item, recipe })

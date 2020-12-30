@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2020-12-30
+
+  Info:
+    - Updated for version 1.1 of Factorio.
+
+  Features:
+    - Added settings to change amounts of some recipe ingredients.
+
+  Changes:
+    - Recipe requires more ingredients now.
+    - Slightly increased maximum values for range settings (0 still means unlimited range).
+    - Added script logic to fulfill logistic requests of vehicles (e.g. Spidertrons).
+---------------------------------------------------------------------------------------------------
 Version: 1.0.4
 Date: 2020-10-21
 
