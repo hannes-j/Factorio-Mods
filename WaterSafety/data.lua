@@ -35,7 +35,7 @@ if settings.startup["WaterSafety-enable-waterfill"].value then
     recipe.name = item.name
     recipe.result = item.name
     recipe.ingredients = {
-        {"water-barrel", 5},
+        {"water-barrel", 4},
         {"cliff-explosives", 1}
     }
     
