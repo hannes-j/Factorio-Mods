@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.1
+Date: 2022-09-10
+
+  Features:
+    - Added setting to change inventory size of the chests.
+
+  Changes:
+    - Default inventory size of the chests is now 24 spaces.
+
+  Compatibility:
+    - Fixed critical startup error regarding icon in combination with mods that change logistic containers like "AAI Containers & Warehouses".
+---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 2020-12-30
 
