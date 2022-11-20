@@ -48,36 +48,67 @@ if settings.startup[main_name.."-alt"].value then
         if not recipe.localised_name then
             if recipe.expensive and recipe.expensive.results then
                 if #recipe.expensive.results > 1 then
-                    recipe_alt.localised_name = {"", {"recipe-name."..recipe.name}}
+                    if not recipe.expensive.main_product or recipe.expensive.main_product == "" then
+                        recipe_alt.localised_name = {"", {"recipe-name."..recipe.name}}
+                    end
                 else
+                    local res_name  = ""
                     local prototype = nil
+
                     if recipe.expensive.results[1]["type"] then
-                        prototype = data.raw[recipe.expensive.results[1]["type"]][recipe.expensive.results[1]["name"]]
+                        res_name  = recipe.expensive.results[1]["name"]
+                        prototype = data.raw[recipe.expensive.results[1]["type"]][res_name]
                     else
-                        prototype = data.raw.item[recipe.expensive.results[1][1]]
+                        res_name  = recipe.expensive.results[1][1]
+                        prototype = data.raw.item[res_name]
+                    end
+
+                    if res_name and not prototype then
+                        for key, prototypes in pairs(data.raw) do
+                            if key ~= "recipe" and key ~= "technology" and prototypes[res_name] then
+                                prototype = prototypes[res_name]
+                            end
+                        end
                     end
 
                     if prototype and prototype.localised_name then
                         recipe_alt.localised_name = prototype.localised_name
-                    else
-                        recipe_alt.localised_name = {"", {prototype.type.."-name."..prototype.name}}
+                    elseif res_name and res_name ~= "" then
+                        recipe_alt.expensive.main_product = res_name
+
+                        if recipe.normal and recipe.normal.results then recipe_alt.normal.main_product = res_name end
+                        if recipe.results                          then recipe_alt.main_product        = res_name end
                     end
                 end
             elseif recipe.results then
                 if #recipe.results > 1 then
-                    recipe_alt.localised_name = {"", {"recipe-name."..recipe.name}}
+                    if not recipe.main_product or recipe.main_product == "" then
+                        recipe_alt.localised_name = {"", {"recipe-name."..recipe.name}}
+                    end
                 else
+                    local res_name  = ""
                     local prototype = nil
+
                     if recipe.results[1]["type"] then
-                        prototype = data.raw[recipe.results[1]["type"]][recipe.results[1]["name"]]
+                        res_name  = recipe.results[1]["name"]
+                        prototype = data.raw[recipe.results[1]["type"]][res_name]
                     else
-                        prototype = data.raw.item[recipe.results[1][1]]
+                        res_name  = recipe.results[1][1]
+                        prototype = data.raw.item[res_name]
+                    end
+
+                    if res_name and not prototype then
+                        for key, prototypes in pairs(data.raw) do
+                            if key ~= "recipe" and key ~= "technology" and prototypes[res_name] then
+                                prototype = prototypes[res_name]
+                            end
+                        end
                     end
 
                     if prototype and prototype.localised_name then
                         recipe_alt.localised_name = prototype.localised_name
-                    else
-                        recipe_alt.localised_name = {"", {prototype.type.."-name."..prototype.name}}
+                    elseif res_name and res_name ~= "" then
+                        recipe_alt.main_product = res_name
                     end
                 end
             end
