@@ -1,0 +1,13 @@
+{
+    "name": "SolidifiedFluids",
+    "version": "1.1.0",
+    "title": "Solidified Fluids",
+    "author": "Fantasylord",
+    "homepage": "",
+    "contact": "",
+    "description": "{locale}",
+    "factorio_version": "1.1",
+    "dependencies": [
+        "base >= 1.1.6"
+    ]
+}
