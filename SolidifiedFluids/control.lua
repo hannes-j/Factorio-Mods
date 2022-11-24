@@ -45,3 +45,7 @@ script.on_event({defines.events.on_research_finished, defines.events.on_research
     if tech.name == main_name then validate_recipes_for_techs()
     else validate_recipes_for_tech(tech) end
 end)
+
+script.on_event({defines.events.on_technology_effects_reset}, function(event)
+    validate_recipes_for_techs()
+end)
