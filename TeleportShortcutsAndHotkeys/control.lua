@@ -172,7 +172,7 @@ end
 function equip_teleport_tool(player_idx)
     local player = game.players[player_idx]
     
-    if player.clear_cursor() then
+    if player.clear_cursor() and player.cursor_stack ~= nil then
         player.cursor_stack.set_stack("teleport-destination-blueprint")
         
         if player.game_view_settings.show_entity_info then
