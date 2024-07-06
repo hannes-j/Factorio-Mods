@@ -127,7 +127,6 @@ function named_teleport(player_idx, tag_name)
             end
         end
         
-        
         for i = 1, #game.surfaces do
             if dstn then break end
             
@@ -172,7 +171,7 @@ end
 function equip_teleport_tool(player_idx)
     local player = game.players[player_idx]
     
-    if player.clear_cursor() then
+    if player.cursor_stack ~= nil and player.clear_cursor() then
         player.cursor_stack.set_stack("teleport-destination-blueprint")
         
         if player.game_view_settings.show_entity_info then
